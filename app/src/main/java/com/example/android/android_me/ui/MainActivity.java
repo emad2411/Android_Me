@@ -18,12 +18,14 @@ package com.example.android.android_me.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.android.android_me.R;
+import com.example.android.android_me.data.AndroidImageAssets;
 
 // This activity is responsible for displaying the master list of all images
 // Implement the MasterListFragment callback, OnImageClickListener
@@ -34,6 +36,11 @@ public class MainActivity extends AppCompatActivity implements MasterListFragmen
     private int headIndex;
     private int bodyIndex;
     private int legIndex;
+    private boolean mDualPane=false;
+    private Button mNextButton;
+
+
+
 
     // TODO (3) Create a variable to track whether to display a two-pane or single-pane UI
         // A single-pane display refers to phone screens, and two-pane to larger tablet screens
@@ -44,8 +51,55 @@ public class MainActivity extends AppCompatActivity implements MasterListFragmen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mNextButton = (Button) findViewById(R.id.next_button);
+
+
         // TODO (4) If you are making a two-pane display, add new BodyPartFragments to create an initial Android-Me image
         // Also, for the two-pane display, get rid of the "Next" button in the master list fragment
+
+        if (findViewById(R.id.second_pane)!=null){
+            mDualPane=true;
+            mNextButton.setVisibility(View.GONE);
+
+            if(savedInstanceState == null) {
+                // Retrieve list index values that were sent through an intent; use them to display the desired Android-Me body part image
+                // Use setListindex(int index) to set the list index for all BodyPartFragments
+
+                // Create a new head BodyPartFragment
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                BodyPartFragment headFragment = new BodyPartFragment();
+
+                // Set the list of image id's for the head fragment and set the position to the second image in the list
+                headFragment.setImageIds(AndroidImageAssets.getHeads());
+
+                headFragment.setListIndex(headIndex);
+
+                // Add the fragment to its container using a FragmentManager and a Transaction
+
+                fragmentManager.beginTransaction()
+                        .add(R.id.head_container, headFragment)
+                        .commit();
+
+                // Create and display the body and leg BodyPartFragments
+
+                BodyPartFragment bodyPartFragment = new BodyPartFragment();
+                bodyPartFragment.setImageIds(AndroidImageAssets.getBodies());
+                bodyPartFragment.setListIndex(bodyIndex);
+
+                fragmentManager.beginTransaction()
+                        .add(R.id.body_container, bodyPartFragment)
+                        .commit();
+
+                BodyPartFragment legFragment = new BodyPartFragment();
+                legFragment.setImageIds(AndroidImageAssets.getLegs());
+                legFragment.setListIndex(legIndex);
+
+                fragmentManager.beginTransaction()
+                        .add(R.id.leg_container, legFragment)
+                        .commit();
+            }
+
+        }
 
     }
 
@@ -57,6 +111,10 @@ public class MainActivity extends AppCompatActivity implements MasterListFragmen
         // TODO (5) Handle the two-pane case and replace existing fragments right when a new image is selected from the master list
         // The two-pane case will not need a Bundle or Intent since a new activity will not be started;
         // This is all happening in this MainActivity and one fragment will be replaced at a time
+
+
+
+
 
 
         // Based on where a user has clicked, store the selected list index for the head, body, and leg BodyPartFragments
@@ -80,25 +138,67 @@ public class MainActivity extends AppCompatActivity implements MasterListFragmen
             default: break;
         }
 
-        // Put this information in a Bundle and attach it to an Intent that will launch an AndroidMeActivity
-        Bundle b = new Bundle();
-        b.putInt("headIndex", headIndex);
-        b.putInt("bodyIndex", bodyIndex);
-        b.putInt("legIndex", legIndex);
 
-        // Attach the Bundle to an intent
-        final Intent intent = new Intent(this, AndroidMeActivity.class);
-        intent.putExtras(b);
 
-        // The "Next" button launches a new AndroidMeActivity
-        Button nextButton = (Button) findViewById(R.id.next_button);
-        nextButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(intent);
-            }
-        });
+
+        if (mDualPane){
+
+            FragmentManager fragmentManager = getSupportFragmentManager();
+
+            BodyPartFragment headFragment = new BodyPartFragment();
+
+            // Set the list of image id's for the head fragment and set the position to the second image in the list
+            headFragment.setImageIds(AndroidImageAssets.getHeads());
+
+            headFragment.setListIndex(headIndex);
+
+            // Add the fragment to its container using a FragmentManager and a Transaction
+
+            fragmentManager.beginTransaction()
+                    .replace(R.id.head_container, headFragment)
+                    .commit();
+
+            // Create and display the body and leg BodyPartFragments
+
+            BodyPartFragment bodyPartFragment = new BodyPartFragment();
+            bodyPartFragment.setImageIds(AndroidImageAssets.getBodies());
+            bodyPartFragment.setListIndex(bodyIndex);
+
+            fragmentManager.beginTransaction()
+                    .replace(R.id.body_container, bodyPartFragment)
+                    .commit();
+
+            BodyPartFragment legFragment = new BodyPartFragment();
+            legFragment.setImageIds(AndroidImageAssets.getLegs());
+            legFragment.setListIndex(legIndex);
+
+            fragmentManager.beginTransaction()
+                    .replace(R.id.leg_container, legFragment)
+                    .commit();
+        }else {
+
+            // Put this information in a Bundle and attach it to an Intent that will launch an AndroidMeActivity
+            Bundle b = new Bundle();
+            b.putInt("headIndex", headIndex);
+            b.putInt("bodyIndex", bodyIndex);
+            b.putInt("legIndex", legIndex);
+
+            // Attach the Bundle to an intent
+            final Intent intent = new Intent(this, AndroidMeActivity.class);
+            intent.putExtras(b);
+            mNextButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startActivity(intent);
+                }
+            });
+
+        }
+
 
     }
+
+
+
 
 }
